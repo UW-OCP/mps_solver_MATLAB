@@ -1,0 +1,6 @@
+@(y, z, p, alpha) ODE_h(y, z, p, alpha)
+@(y, z, p, alpha) DAE_g(y, z, p, alpha)
+@(s, p, alpha) D_hg(s, p, alpha)
+@(t, s, p, alpha) J_hg(t, s, p, alpha)
+@(y0, yM, p) BC_r(y0, yM, p)
+@(y0, yM, p) D_r(y0, yM, p)

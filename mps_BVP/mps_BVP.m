@@ -1,464 +1,4 @@
-%% multiple shooting method solver for OCP problem
-% The solver is composed of two parts: symbolic part and numerical part
-function mps_OCP(OCP_file)
-    fprintf('%s\n', OCP_file);
-    if exist(OCP_file, 'file') == 0
-        fprintf('%s\n', 'The input OCP file does not exist!');
-    elseif exist(OCP_file, 'file') == 2
-        [y0, z0, para, t0, tf, t_span, outputFile, alpham, tol, nodes_max, mesh_max, nx, nu, nw, nd, ns] = generate_bvpdae(OCP_file);
-        mps_solver(y0, z0, para, t0, tf, outputFile, alpham, tol, nodes_max, mesh_max, nx, nu, nw, nd, ns);
-    end
-end
-
-%% Symbolic part
-% Transfer OCP problem to BVP problem using the symbolic functions in MATLAB
-function [y0, z0, para, t0, tf, t_span, output_File, alpham, tol, nodes_max, mesh_max, nx, nu, nw, nd, ns] = generate_bvpdae(filename)
-% avoid the use of the ancient Greek alphabet like "beta", "theta"
-% as the name of the variables as they are easy to be the name of matlan mupad function
-
-%% Pre-allocate size of each variables
-nx = 0;
-nw = 0;
-nu = 0;
-nd = 0;
-ns = 0;
-nT = 0;
-nF = 0;
-nau = 0;
-ntp = 0;
-
-t0 = 0;
-tf = 1;
-
-flag_se = 0; % flag to detect whether state estimate exists in the file
-flag_ce = 0; % flag to detect whether control estimate exists in the file
-flag_pe = 0; % flag to detect whether parameter estimate exists in the file
-flag_constants = 0; % flag to detect whether constants exists in the file
-flag_inputFile = 0; % flag to detect whether inputFile exists in the file
-
-Nodes = 101;
-nodes_max = 2000;
-mesh_max = 25;
-alpham = 1;
-output_File = 'output';
-
-% Set up the variable to hold each term
-sv = 0;
-cv = 0;
-ic = 0;
-tc = 0;
-cf = 0;
-de = 0;
-%% Read the specified File
-fid = fopen(filename);
-tline = fgetl(fid);
-while ischar(tline)
-    if (size(tline, 2) ~= 0 && tline(1) ~= '#')
-        pattern = 'Constants';
-        TF = contains(tline, pattern);
-        if (TF)
-            fprintf(1,'%s\n',tline);
-            pos = strfind(tline, '=');
-            exp = extractAfter(tline, pos(1));
-            [C, ~] = strsplit(exp, {';'},'CollapseDelimiters',true);
-            constants = sym(char(C(1)));
-            flag_constants = 1;
-        else
-            [C, ~] = strsplit(tline,{'=', ';'},'CollapseDelimiters',true);
-            exp = string(C(1));
-            exp = strtrim(exp);
-            switch exp
-                case 'StateVariables'
-                    fprintf(1,'%s\n',tline);
-                    sv = transpose(sym(char(C(2))));
-                    nx = size(sv, 1);
-                case 'ControlVariables'
-                    fprintf(1,'%s\n',tline);
-                    cv = transpose(sym(char(C(2))));
-                    nu = size(cv, 1);
-                case 'ParameterVariables'
-                    fprintf(1,'%s\n',tline);
-                    pv = transpose(sym(char(C(2))));
-                    nw = size(pv, 1);
-                case 'InitialConstraints'
-                    fprintf(1,'%s\n',tline);
-                    ic = sym(char(C(2)));
-                    nT = size(ic, 2);
-                case 'TerminalConstraints'
-                    fprintf(1,'%s\n',tline);
-                    tc = sym(char(C(2)));
-                    nF = size(tc, 2);
-                case 'TerminalPenalty'
-                    fprintf(1,'%s\n',tline);
-                    tp = sym(char(C(2)));
-                    ntp = size(tp, 2);
-                case 'CostFunctional'
-                    fprintf(1,'%s\n',tline);
-                    cf = sym(char(C(2)));
-                case 'DifferentialEquations'
-                    fprintf(1,'%s\n',tline);
-                    de = sym(char(C(2)));
-                case 'InequalityConstraints'
-                    fprintf(1,'%s\n',tline);
-                    cvic = sym(char(C(2)));
-                    nd = size(cvic, 2);
-                case 'EqualityConstraints'
-                    fprintf(1,'%s\n',tline);
-                    ec = sym(char(C(2)));
-                    nau = size(ec, 2);
-                case 'StateVariableInequalityConstraints'
-                    fprintf(1,'%s\n',tline);
-                    svic = sym(char(C(2)));
-                    ns = size(svic, 2);
-                case 'Nodes'
-                    fprintf(1,'%s\n',tline);
-                    Nodes = str2double(char(C(2)));
-                case 'Tolerance'
-                    fprintf(1,'%s\n',tline);
-                    tol = str2double(char(C(2)));
-                case 'OutputFile'
-                    fprintf(1,'%s\n',tline);
-                    exp = erase(char(C(2)), '.');
-                    exp = strtrim(exp);
-                    output_File = strip(exp, 'both', '"');
-                case 'InputFile'
-                    fprintf(1,'%s\n',tline);
-                    exp = erase(char(C(2)), '.');
-                    exp = strtrim(exp);
-                    input_File = strip(exp, 'both', '"');
-                    flag_inputFile = 1;
-                case 'StateEstimate'
-                    fprintf(1,'%s\n',tline);
-                    state_estimate = sym(char(C(2)));
-                    flag_se = 1;
-                case 'ControlEstimate'
-                    fprintf(1,'%s\n',tline);
-                    control_estimate = sym(char(C(2)));
-                    flag_ce = 1;
-                case 'ParameterEstimate'
-                    fprintf(1,'%s\n',tline);
-                    parameter_estimate = sym(char(C(2)));
-                    flag_pe = 1;
-                case 'InitialTime'
-                    fprintf(1,'%s\n',tline);
-                    t0 = sym(char(C(2)));
-                case 'FinalTime'
-                    fprintf(1,'%s\n',tline);
-                    tf = sym(char(C(2)));
-                case 'MaximumNodes'
-                    fprintf(1,'%s\n',tline);
-                    nodes_max = str2double(char(C(2)));
-                case 'MaximumMeshRefinements'
-                    fprintf(1,'%s\n',tline);
-                    mesh_max = str2double(char(C(2)));
-            end
-        end
-    end
-    tline = fgetl(fid);
-end
-fclose(fid);
-if (nw == 0)
-    pv = sym('pv', [nw, 1]);
-end
-if (nau == 0)
-    ec = sym('ec', [1, nau]);
-end
-if (nd == 0)
-    cvic = sym('cvic', [1, nd]);
-end
-if (ns == 0)
-    svic = sym('svic', [1, ns]);
-end
-if (ntp == 0)
-    tp = 0;
-end
-if (nd || ns)
-    alpham = 1e-6;
-end
-%% Substitue the constants term
-if (flag_constants)
-    for i = 1 : size(constants, 2)
-        ic = subs(ic, lhs(constants(i)), rhs(constants(i)));
-        tc = subs(tc, lhs(constants(i)), rhs(constants(i)));
-        cf = subs(cf, lhs(constants(i)), rhs(constants(i)));
-        de = subs(de, lhs(constants(i)), rhs(constants(i)));
-        t0 = subs(t0, lhs(constants(i)), rhs(constants(i)));
-        tf = subs(tf, lhs(constants(i)), rhs(constants(i)));
-        if (nau ~= 0)
-            ec  = subs(ec, lhs(constants(i)), rhs(constants(i)));
-        end
-        if (nd ~= 0)
-            cvic  = subs(cvic, lhs(constants(i)), rhs(constants(i)));
-        end
-        if (ns ~= 0)
-            svic  = subs(svic, lhs(constants(i)), rhs(constants(i)));
-        end
-        if (ntp ~= 0)
-            tp  = subs(tp, lhs(constants(i)), rhs(constants(i)));
-        end
-        if (flag_se)
-            state_estimate = subs(state_estimate, lhs(constants(i)), rhs(constants(i)));
-        end
-        if (flag_ce)
-            control_estimate = subs(control_estimate, lhs(constants(i)), rhs(constants(i)));
-        end
-        if (flag_pe)
-            parameter_estimate = subs(parameter_estimate, lhs(constants(i)), rhs(constants(i)));
-        end
-    end
-end
-
-%% Generate the symbolic functions needed
-ny = 2 * nx + nw;
-nz = nu + 2 * nd + 2 * ns + nau;
-np = nw + nT + nF;
-
-% Define the variables
-t = sym('t'); % time variable
-alpha = sym('alpha'); % continuation parameter
-lambda = sym('lambda', [nx 1]); % co-state variable
-gama = sym('gama', [nw 1]); % co-parameter vector
-mu = sym('mu', [nd 1]); % Lagrange multipliers a.w. the mixed control-state-parameter inequality constraints
-e = sym('e', [ns 1]); % Lagrange multipliers a.w. the state variable inequality constraints
-v = sym('v', [nd 1]); % non-negative slack variables a.w. the CVIC
-sigma = sym('sigma', [ns 1]); % non-negative slack variables a.w. the SVIC
-au = sym('au', [nau 1]); % Lagrange multipliers a.w. the auxiliary equality constraints
-Ki = sym('Ki', [nT 1]); % Lagrange multipliers a.w. the initial constraints
-Kf = sym('Kf', [nF 1]); % Lagrange multipliers a.w. the terminal constraints
-
-y = [sv; lambda; gama];
-z = [au; cv; mu; e; v; sigma];
-p = [pv; Ki; Kf];
-
-% Hamiltonian function
-% H = 0.5 * alpha * transpose(cv) * cv + cf + de * lambda + ec * au + cvic * mu + svic * e;
-H = cf + de * lambda + ec * au + cvic * mu + svic * e;
-if (nd || ns)
-    H = H + 0.5 * alpha * transpose(cv) * cv;
-end
-matlabFunction(H,'File','hamiltonian','Optimize', false, 'Vars', {[y; z], p, alpha});
-
-%% DAEs of the system
-h = sym('h', [ny 1]); % ODEs
-g = sym('g', [nz 1]); % DAEs
-
-% H / lamda
-for i = 1 : nx
-    h(i) = diff(H, lambda(i));
-end
-% H / x
-for i = nx + 1 : 2 * nx
-    h(i) = diff(-H, sv(i - nx));
-end
-% H / w
-for i = 2 * nx + 1 : ny
-    h(i) = diff(H, pv(i - 2 * nx));
-end
-% H / au
-for i = 1 : nau
-    g(i) = diff(H, au(i));
-end
-% H /u
-for i = 1 : nu
-    g(i + nau) = diff(H, cv(i));
-end
-
-%% Inequality constraint part
-M = diag(mu);
-N = diag(v);
-E = diag(e);
-S = diag(sigma);
-e_d = ones(nd, 1);
-e_s = ones(ns, 1);
-g(nau + nu + 1 : nau + nu + nd) = transpose(cvic) + N * e_d - alpha * M * e_d;
-g(nau + nu + nd + 1 : nau + nu + nd + ns) = transpose(svic) + S * e_s - alpha * E * e_s;
-
-% Fischer-Burmeister formula
-syms FBa FBb
-psi(FBa, FBb) =  FBa + FBb - sqrt(FBa ^ 2 + FBb ^2 + 2 * alpha);
-g(nau + nu + nd + ns + 1 : nau + nu + 2 * nd + ns) = psi(mu, v);
-g(nau + nu + 2 * nd + ns + 1 : nau + nu + 2 * nd + 2 * ns) = psi(e, sigma);
-
-matlabFunction(g,'File','DAE_g','Optimize', false, 'Vars', {y, z, p, alpha});
-matlabFunction(h,'File','ODE_h','Optimize', false, 'Vars', {y, z, p, alpha});
-%% Derivative of the DAEs
-hy = sym('hy_%d_%d', [ny ny]);
-hz = sym('hz_%d_%d', [ny nz]);
-hp = sym('hp_%d_%d', [ny np]);
-gy = sym('gy_%d_%d', [nz ny]);
-gz = sym('gz_%d_%d', [nz nz]);
-gp = sym('gp_%d_%d', [nz np]);
-
-for i = 1 : ny
-    for j = 1: ny
-        hy(i, j) = diff(h(i), y(j));
-    end
-end
-for i = 1 : ny
-    for j = 1: nz
-        hz(i, j) = diff(h(i), z(j));
-    end
-end
-for i = 1 : ny
-    for j = 1: np
-        hp(i, j) = diff(h(i), p(j));
-    end
-end
-for i = 1 : nz
-    for j = 1: ny
-        gy(i, j) = diff(g(i), y(j));
-    end
-end
-for i = 1 : nz
-    for j = 1: nz
-        gz(i, j) = diff(g(i), z(j));
-    end
-end
-for i = 1 : nz
-    for j = 1: np
-        gp(i, j) = diff(g(i), p(j));
-    end
-end
-J1 = [hy hz
-    gy gz];
-
-matlabFunction(hy, hz, hp, gy, gz, gp,'File','difference_DAE','Optimize', false, 'Vars', {[y; z], p, alpha}, 'Sparse', true);
-matlabFunction(J1,'File','jacobian_DAE','Optimize', false, 'Vars', {t, [y; z], p, alpha}, 'Sparse', true);
-
-%% Define boundary constraints
-sv0 = sym('sv%d_0', [nx 1]);
-svN = sym('sv%d_N', [nx 1]);
-lambda0 = sym('lambda%d_0', [nx 1]);
-lambdaN = sym('lambda%d_N', [nx 1]);
-gama0 = sym('gama%d_0', [nw 1]);
-gamaN = sym('gama%d_N', [nw 1]);
-
-r = sym('r', [ny + np 1]); % boundary constraints
-D_Gamma_x = sym('D_Tao_x', [nx nT]);
-D_Psi_x = sym('D_Psi_x', [nx nF]);
-D_Phi_x = sym('D_fai_x', [nx, 1]);
-D_Gamma_w = sym('D_Tao_w', [nw nT]);
-D_Psi_w = sym('D_Psi_w', [nw nF]);
-D_Phi_w = sym('D_fai_w', [nw, 1]);
-
-y0 = [sv0; lambda0; gama0];
-yM = [svN; lambdaN; gamaN];
-
-% substitute the variable to distinguish the variables at the initial and
-% terminal time
-ic = subs(ic, sv, sv0);
-tc = subs(tc, sv, svN);
-tp = subs(tp, sv, svN);
-
-for i = 1 : nT
-    r(i) = ic(i);
-end
-for i = 1 : nx
-    for j = 1 : nT
-        D_Gamma_x(i, j) = diff(ic(j), sv0(i));
-    end
-end
-r(1 + nT : nx + nT) = lambda0 + D_Gamma_x * Ki;
-for i = 1 : nw
-    for j = 1 : nT
-        D_Gamma_w(i, j) = diff(ic(j), pv(i));
-    end
-end
-r(1 + nT + nx : nw + nT + nx) = gama0 - D_Gamma_w * Ki;
-for i = 1 : nF
-    r(i + nT + nx + nw) = tc(i);
-end
-for i = 1 : nx
-    D_Phi_x(i) = diff(tp, svN(i));
-end
-for i = 1 : nx
-    for j = 1 : nF
-        D_Psi_x(i, j) = diff(tc(j), svN(i));
-    end
-end
-r(1 + nT + nx + nw + nF : nx + nT + nx + nw + nF) = lambdaN - D_Phi_x - D_Psi_x * Kf;
-for i = 1 : nw
-    D_Phi_w(i) = diff(tp, pv(i));
-end
-for i = 1 : nw
-    for j = 1 : nF
-        D_Psi_w(i, j) = diff(tc(j), pv(i));
-    end
-end
-r(1 + nT + nx + nw + nF + nx : nw + nT + nx + nw + nF + nx) = gamaN + D_Phi_w + D_Psi_w * Kf;
-matlabFunction(r,'File','boundary_constraint','Optimize', false, 'Vars', {y0, yM, p});
-
-%% Derivative of bounday constraints
-r_x0 = sym('r_x0', [ny + np ny]);
-r_xM = sym('r_xM', [ny + np ny]);
-r_p = sym('r_p', [ny + np np]);
-% r w.r.t y0
-for i = 1 : ny + np
-    for j = 1 : ny
-        r_x0(i, j) = diff(r(i), y0(j));
-    end
-end
-% r w.r.t yM
-for i = 1 : ny + np
-    for j = 1 : ny
-        r_xM(i, j) = diff(r(i), yM(j));
-    end
-end
-% r w.r.t p
-for i = 1 : ny + np
-    for j = 1: np
-        r_p(i, j) = diff(r(i), p(j));
-    end
-end
-matlabFunction(r_x0,r_xM,r_p,'File','difference_BC','Optimize', false, 'Vars', {y0, yM, p});
-
-%% Set up state and control estimate
-t0 = double(t0);
-tf = double(tf);
-t_span = linspace(t0, tf, Nodes)';
-y0 = ones(Nodes, ny);
-z0 = ones(Nodes, nz);
-
-if (flag_se || flag_ce)
-    for i = 1 : Nodes
-        if (flag_se)
-            for j = 1 : size(state_estimate, 2)
-                y0(i, j) = subs(state_estimate(j), t, t_span(i));
-            end
-        end
-        if (flag_ce)
-            for j = 1 : size(control_estimate, 2)
-                z0(i, j) = subs(control_estimate(j), t, t_span(i));
-            end
-        end
-    end
-elseif (flag_inputFile)
-    input_File_y = [input_File, '_y.txt'];
-    input_File_z = [input_File, '_z.txt'];
-    input_y = load(input_File_y);
-    input_z = load(input_File_z);
-    size_y = size(input_y, 2);
-    Nodes = size(input_y, 1);
-    y0 = ones(Nodes, ny);
-    z0 = ones(Nodes, nz);
-    t_span = input_y(1 : Nodes, 1);
-    y0(1 : Nodes, 1 : size_y - 1) = input_y(1 : Nodes, 2 : end);
-    z0(1 : Nodes, 1 : nu) = input_z(1 : Nodes, 1 : nu);
-    z0(Nodes, 1 : nu) = input_z(end, 1 : nu);
-end
-% y0(1 : Nodes, 1 + nx : ny) = 10 * ones(Nodes, (ny - nx));
-% z0(1 : Nodes, 1 + nu : nz) = 10 * ones(Nodes, (nz - nu));
-para = ones(np, 1);
-if (flag_pe)
-    for j = 1 : size(parameter_estimate, 2)
-        para(j) = double(parameter_estimate(j));
-    end
-end
-end
-
-%% Numerical part
-% Numerically solve the BVP problem generated by the symbolic solver
-function mps_solver(y0, z0, p, ti, tM, output, alpham, tolerance, nodes_max, mesh_max, nx, nu, nw, nd, ns)
+function mps_BVP(ODE_h, DAE_g, BC_r, D_hg, D_r, J_hg, y0, z0, p, ti, tM, output, alpham, tolerance, nodes_max, mesh_max, nx, nu, nw, nd, ns)
 
 warning off
 t_all = tic;
@@ -510,13 +50,17 @@ for alphacal = 1:MAX_ITER
     for caltime=1:MAX_ITER
         %% Computer F(s0)
         t_construct = tic;
-        sol = construct(s0, p, alpha, tspan, coefficients);
+        sol = construct(@(y, z, p, alpha) ODE_h(y, z, p, alpha), @(y, z, p, alpha) DAE_g(y, z, p, alpha),...
+            @(s, p, alpha) D_hg(s, p, alpha), @(t, s, p, alpha) J_hg(t, s, p, alpha),...
+            s0, p, alpha, tspan, coefficients);
         time_construct_it = toc(t_construct);
         time_construct = time_construct + time_construct_it;
         number_of_times_construct = number_of_times_construct + 1;
         
         t_residual = tic;
-        [F_s0, sol, maxlte] = F_s_residual(sol, s0, p, tspan, alpha, 'yes');
+        [F_s0, sol, maxlte] = F_s_residual(@(y, z, p, alpha) ODE_h(y, z, p, alpha), @(y, z, p, alpha) DAE_g(y, z, p, alpha),...
+            @(t, s, p, alpha) J_hg(t, s, p, alpha), @(y0, yM, p) BC_r(y0, yM, p),...
+            sol, s0, p, tspan, alpha, 'yes');
 %         [F_s0, sol, maxlte] = F_s_spmd_residual(sol, s0, p, tspan, alpha, 'yes');
         time_residual_it = toc(t_residual);
         time_residual = time_residual + time_residual_it;
@@ -534,7 +78,7 @@ for alphacal = 1:MAX_ITER
             break
         end
         %% Generation of the Jacobian Matrix
-        sol = DF(sol, p);
+        sol = DF(@(y0, yM, p) D_r(y0, yM, p), sol, p);
         t_BABD = tic;
 %         delta_s = qr_spmd(sol);
         %% QR decomposition
@@ -563,7 +107,9 @@ for alphacal = 1:MAX_ITER
                 p_New = p + alpha0 * delta_s(1 + end - np : end);
                 
                 t_residual = tic;
-                [F_s0_new, sol, ~] = F_s_residual(sol, s_New, p_New, tspan, alpha, 'no');
+                [F_s0_new, sol, ~] = F_s_residual(@(y, z, p, alpha) ODE_h(y, z, p, alpha), @(y, z, p, alpha) DAE_g(y, z, p, alpha),...
+                    @(t, s, p, alpha) J_hg(t, s, p, alpha), @(y0, yM, p) BC_r(y0, yM, p),...
+                    sol, s_New, p_New, tspan, alpha, 'no');
 %                 [F_s0_new, sol, ~] = F_s_spmd_residual(sol, s_New, p_New, tspan, alpha, 'no');
                 time_residual_it = toc(t_residual);
                 time_residual = time_residual + time_residual_it;
@@ -579,8 +125,6 @@ for alphacal = 1:MAX_ITER
             if i == alpha0search
                 disp(['The solution does not converge at the alpha line-search, Remesh!, alpha = ', num2str(alpha), '.']);
                 fprintf(fileID_info, '%s%d%s%d%s\n', 'The solution does not converge at the alpha line-search, Remesh!, alpha = ', alpha, '; Nodes = ', M, '.');
-                %                 [s0, tspan] = mesh_refinement_MidPoint(sol, s0, tspan);
-                %                 [s0, tspan] = double_mesh(sol, s0, tspan);
                 [s0, tspan] = mesh_refinement(sol, s0, tspan);
                 mesh_time = mesh_time + 1;
                 disp(['Remeshed!, Number of nodes = ', num2str(M), '.']);
@@ -607,7 +151,9 @@ for alphacal = 1:MAX_ITER
     while maxlte > 1
         [s0, tspan] = mesh_refinement(sol, s0, tspan);
         t_residual = tic;
-        [~, sol, maxlte] = F_s_residual(sol, s0, p, tspan, alpha, 'yes');
+        [~, sol, maxlte] = F_s_residual(@(y, z, p, alpha) ODE_h(y, z, p, alpha), @(y, z, p, alpha) DAE_g(y, z, p, alpha),...
+            @(t, s, p, alpha) J_hg(t, s, p, alpha), @(y0, yM, p) BC_r(y0, yM, p),...
+            sol, s0, p, tspan, alpha, 'yes');
 %         [~, sol, maxlte] = F_s_spmd_residual(sol, s0, p, tspan, alpha, 'yes');
         time_residual_it = toc(t_residual);
         time_residual = time_residual + time_residual_it;
@@ -1115,18 +661,20 @@ coefficients.e = e;
 end
 
 %% Construct the initial structure
-function sol = construct(s, p, alpha, tspan, coefficients)
+function sol = construct(ODE_h, DAE_g, D_hg, J_hg,s, p, alpha, tspan, coefficients)
 
 global M ny nz np
 sol(M)=struct('y',[],'z',[],'h_y',[],'h_z',[],'h_p',[],'g_y',[],'g_z',[],'g_p',[],'y_y',[],'y_z',[],'y_p',[],...
     'A',[], 'C',[], 'H',[], 'b', [], 'B', [], 'index', [],...
     'R', [], 'E', [], 'J', [], 'G', [], 'C_til', [], 'A_til', [], 'H_til', [], 'G_til', [], 'b_til', [], 'delta_s', [], 'delta_p', []);
-parfor i = 1:M
+% parfor i = 1:M
+for i = 1:M
     sol(i).y = s(1 + (i - 1) * (nz + ny) : ny + (i - 1) * (nz + ny));
     sol(i).z = s(1 + ny + (i - 1) * (nz + ny) : i * (nz + ny));
 end
-parfor i = 1 : M - 1
-    [h_y, h_z, h_p, g_y, g_z, g_p] = difference_DAE([sol(i).y; sol(i).z], p, alpha);
+% parfor i = 1 : M - 1
+for i = 1 : M - 1
+    [h_y, h_z, h_p, g_y, g_z, g_p] = D_hg([sol(i).y; sol(i).z], p, alpha);
     sol(i).h_y = h_y;
     sol(i).h_z = h_z;
     sol(i).h_p = h_p;
@@ -1134,12 +682,14 @@ parfor i = 1 : M - 1
     sol(i).g_z = g_z;
     sol(i).g_p = g_p;
     t_span = [tspan(i) tspan(i + 1)];
-    [~, X_next] = row_sensitivity_step(t_span, [sol(i).y; sol(i).z], p, alpha, ny, nz, np, coefficients);
+    [~, X_next] = row_sensitivity_step(@(y, z, p, alpha) ODE_h(y, z, p, alpha), @(y, z, p, alpha) DAE_g(y, z, p, alpha),...
+        @(s, p, alpha) D_hg(s, p, alpha), @(t, s, p, alpha) J_hg(t, s, p, alpha),...
+        t_span, [sol(i).y; sol(i).z], p, alpha, ny, nz, np, coefficients);
     sol(i).y_y = X_next(1 : ny, 1 : ny); 
     sol(i).y_z = X_next(1 : ny, 1 + ny : nz + ny);
     sol(i).y_p = X_next(1 : ny, 1 + ny + nz : nz + ny + np);
 end
-[h_y, h_z, h_p, g_y, g_z, g_p] = difference_DAE([sol(M).y; sol(M).z], p, alpha);
+[h_y, h_z, h_p, g_y, g_z, g_p] = D_hg([sol(M).y; sol(M).z], p, alpha);
 sol(M).h_y = h_y;
 sol(M).h_z = h_z;
 sol(M).h_p = h_p;
@@ -1149,7 +699,7 @@ sol(M).g_p = g_p;
 end
 
 %% Calculate the residual of the problem
-function [F_s, sol, maxlte] = F_s_residual(sol, s, p, tspan, alpha, flag_update)
+function [F_s, sol, maxlte] = F_s_residual(ODE_h, DAE_g, J_hg, BC_r, sol, s, p, tspan, alpha, flag_update)
 
 global M ny nz np coefficients tol
 
@@ -1162,7 +712,9 @@ parfor i = 1 : M - 1
     z = s(1 + ny + (i - 1) * (nz + ny) : i * (nz + ny));
     t_span = [tspan(i); (tspan(i) + tspan(i + 1))/2; tspan(i + 1)];
     G = DAE_g(y, z, p, alpha);
-    [x_next, lte] = row_step(t_span, [y; z], p, alpha, ny, nz, np, coefficients, tol);
+    [x_next, lte] = row_step(@(y, z, p, alpha) ODE_h(y, z, p, alpha), @(y, z, p, alpha) DAE_g(y, z, p, alpha),...
+        @(t, s, p, alpha) J_hg(t, s, p, alpha),...
+        t_span, [y; z], p, alpha, ny, nz, np, coefficients, tol);
     y_next = x_next(1 : ny);
     residuals(i).b = -[G; y_next - s(1 + i * (nz + ny) : ny + i * (nz + ny))];
     lte_all(i) = lte;
@@ -1171,7 +723,7 @@ maxlte = norm(lte_all, inf);
 y_0 = s(1 : ny);
 y_M = s(1 + (M - 1) * (nz + ny) : ny + (M - 1) * (nz + ny));
 z = s(1 + ny + (M - 1) * (nz + ny) : M * (nz + ny));
-residuals(M).b = -[DAE_g(y_M, z, p, alpha); boundary_constraint(y_0, y_M, p)];
+residuals(M).b = -[DAE_g(y_M, z, p, alpha); BC_r(y_0, y_M, p)];
 
 % update the residuals and the ltes
 if (strcmp(flag_update, 'yes'))
@@ -1191,13 +743,13 @@ end
 end
 
 %% Construct the Jacobian of the problem
-function sol = DF(sol, p)
+function sol = DF(D_r, sol, p)
 % generation of the Jacobian matrix
 
 global M ny nz np
 
 % for the B0&BM part
-[r_s0, r_sM, r_p] = difference_BC(sol(1).y, sol(M).y, p);
+[r_s0, r_sM, r_p] = D_r(sol(1).y, sol(M).y, p);
 
 B_1 = zeros(nz + ny + np, ny + nz);
 B_1(1 + nz : nz + ny + np, 1 : ny) = r_s0;
@@ -1504,14 +1056,14 @@ end
 end
 
 %% Row method for DAE integration
-function [x_next, lte] = row_step(tspan, x0, p, alpha0, ny, nz, np, coefficients, tol)
+function [x_next, lte] = row_step(ODE_h, DAE_g, J_hg, tspan, x0, p, alpha0, ny, nz, np, coefficients, tol)
 %% Single step integration of the DAE
 y0 = x0(1 : ny);
 z0 = x0(1 + ny : end);
 delta = tspan(end) - tspan(1);
 M = zeros(ny + nz);
 M(1 : ny, 1 : ny) = eye(ny);
-W_j = jacobian_DAE(tspan, x0, p, alpha0);
+W_j = J_hg(tspan, x0, p, alpha0);
 [L,U] = lu(M - coefficients.gamma(1, 1) * delta * W_j);
 
 v_j = zeros(ny + nz , 1);
@@ -1558,14 +1110,14 @@ lte = sqrt(sigma / (ny + nz));
 end
 
 %% Row method for DAE integration with sensitivity
-function [x_next, X_next] = row_sensitivity_step(tspan, x0, p, alpha0, ny, nz, np, coefficients)
-%% Single step integration of the DAE
+function [x_next, X_next] = row_sensitivity_step(ODE_h, DAE_g, D_hg, J_hg,tspan, x0, p, alpha0, ny, nz, np, coefficients)
+% Single step integration of the DAE
 y0 = x0(1 : ny);
 z0 = x0(1 + ny : end);
 delta = tspan(end) - tspan(1);
 M = zeros(ny + nz);
 M(1 : ny, 1 : ny) = eye(ny);
-W_j = jacobian_DAE(tspan, x0, p, alpha0);
+W_j = J_hg(tspan, x0, p, alpha0);
 [L,U] = lu(M - coefficients.gamma(1, 1) * delta * W_j);
 
 v_j = zeros(ny + nz , 1);
@@ -1595,8 +1147,8 @@ for i =1 : coefficients.stages
 end
 x_next = x0 + delta * sum3;
 
-%% Single step integration of the sensitivity
-[~,~,h_p,g_y,g_z,g_p] = difference_DAE(x0, p, alpha0);
+% Single step integration of the sensitivity
+[~,~,h_p,g_y,g_z,g_p] = D_hg(x0, p, alpha0);
 V_j = zeros(ny + nz, ny + nz + np);
 V_j(1 + ny : end, :) = [g_y g_z g_p];
 X0 = zeros(ny + nz, ny + nz + np);
@@ -1617,10 +1169,10 @@ for i = 2 : coefficients.stages
         Sum2 = Sum2 + coefficients.gamma(i, l) * K(:, 1 + (l - 1) * (ny + nz + np): l * (ny + nz + np));
     end
     X_stage(:, 1 + (i - 1) * (ny + nz + np): i * (ny + nz + np)) = X0 + delta * Sum1;
-    [~,~,h_p,~,~,g_p] = difference_DAE(x_stage(: , i), p, alpha0);
+    [~,~,h_p,~,~,g_p] = D_hg(x_stage(: , i), p, alpha0);
     F_p = zeros(ny + nz, ny + nz + np);
     F_p(:, 1 + ny + nz : end) = [h_p; g_p];
-    W = jacobian_DAE(tspan, x_stage(:, i), p, alpha0);
+    W = J_hg(tspan, x_stage(:, i), p, alpha0);
     K(:, 1 + (i - 1) * (ny + nz + np): i * (ny + nz + np)) = U \ (L \ (W *  X_stage(:, 1 + (i - 1) * (ny + nz + np): i * (ny + nz + np)) + F_p - V_j + delta * W_j * Sum2));
 end
 Sum3 = zeros(ny + nz, ny + nz + np);

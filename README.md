@@ -12,7 +12,7 @@ The input of the solver should contain the various function handles to define th
 
 ### Input
 
-* ODE_h : function handle to define the ordinary differential equations (ODEs). The API of the function should be ![equation](https://latex.codecogs.com/gif.latex?\dot{y}&space;=&space;ODE\_h(y,&space;z,&space;p,&space;\alpha)). The dynamic systems considered here are non-autonomous system so there is no explicitly time $t$ in the ODEs. The variables of the function are defined as below,
+* ODE_h : function handle to define the ordinary differential equations (ODEs). The API of the function should be ![equation](https://latex.codecogs.com/gif.latex?\dot{y}&space;=&space;ODE\_h(y,&space;z,&space;p,&space;\alpha)). The dynamic systems considered here are non-autonomous system so there is no explicitly time ![equation](https://latex.codecogs.com/gif.latex?t) in the ODEs. The variables of the function are defined as below,
   * Input:
      * ![equation](https://latex.codecogs.com/gif.latex?y) : ODE variables.
      * ![equation](https://latex.codecogs.com/gif.latex?z) : DAE variables.
@@ -28,8 +28,8 @@ The input of the solver should contain the various function handles to define th
     * ![equation](https://latex.codecogs.com/gif.latex?\alpha) : continuation parameter.
 * BC_r : function handle to define the boundary constraints of the BVP problem. The API of the function should be ![equation](https://latex.codecogs.com/gif.latex?0&space;=&space;BC{\_}r(y_{0},&space;y_{M},&space;p)). The variables of the function are defined as below,
   * Input:
-    * ![equation](https://latex.codecogs.com/gif.latex?y_{0}) : values of the ODE variables at the initial time $t_{0}​$.
-    * ![equation](https://latex.codecogs.com/gif.latex?y_{M}): values of the ODE variables at the final time $t_{M}$.
+    * ![equation](https://latex.codecogs.com/gif.latex?y_{0}) : values of the ODE variables at the initial time ![equation](https://latex.codecogs.com/gif.latex?t_{0}).
+    * ![equation](https://latex.codecogs.com/gif.latex?y_{M}): values of the ODE variables at the final time ![equation](https://latex.codecogs.com/gif.latex?t_{M}).
     * ![equation](https://latex.codecogs.com/gif.latex?p): parameter variables.
 * D_hg : function handle to define the derivative of the ODEs and DAEs w.r.t. ODE variables, DAE variables, and parameter variables. The API of the function should be ![equation](https://latex.codecogs.com/gif.latex?[h_{y},&space;h_{z},&space;h_{p},&space;g_{y},&space;g_{z},&space;g_{p}]&space;=&space;D{\_}hg(s,&space;p,&space;\alpha)). The variables of the function are defined as below,
   * Input:
@@ -73,7 +73,7 @@ The input of the solver should contain the various function handles to define th
 * y : final solution of the ODE varaibles of the problem which is saved in output + '_y.txt' file.
 * z : final solution of the DAE varaibles of the problem which is saved in output + '_z.txt' file.
 * p : final solution of the parameter varaibles of the problem which is saved in output + '_p.txt' file.
-* $\alpha$ : final value of the continuation parameter which in saved in output + '_alpha.txt' file.
+* ![equation](https://latex.codecogs.com/gif.latex?\alpha) : final value of the continuation parameter which in saved in output + '_alpha.txt' file.
 
 ## mps_OCP
 

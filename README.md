@@ -28,33 +28,33 @@ The input of the solver should contain the various function handles to define th
     * ![equation](https://latex.codecogs.com/gif.latex?\alpha) : continuation parameter.
 * BC_r : function handle to define the boundary constraints of the BVP problem. The API of the function should be ![equation](https://latex.codecogs.com/gif.latex?0&space;=&space;BC{\_}r(y_{0},&space;y_{M},&space;p)). The variables of the function are defined as below,
   * Input:
-    * ![equation](https://latex.codecogs.com/gif.latex?y_{0}) : values of the ODE variables at the initial time $t_{0}$.
+    * ![equation](https://latex.codecogs.com/gif.latex?y_{0}) : values of the ODE variables at the initial time $t_{0}​$.
     * ![equation](https://latex.codecogs.com/gif.latex?y_{M}): values of the ODE variables at the final time $t_{M}$.
     * ![equation](https://latex.codecogs.com/gif.latex?p): parameter variables.
-* D_hg : function handle to define the derivative of the ODEs and DAEs w.r.t. ODE variables, DAE variables, and parameter variables. The API of the function should be $[h_{y}, h_{z}, h_{p}, g_{y}, g_{z}, g_{p}] = D{\_}hg(s, p, \alpha)​$. The variables of the function are defined as below,
+* D_hg : function handle to define the derivative of the ODEs and DAEs w.r.t. ODE variables, DAE variables, and parameter variables. The API of the function should be ![equation](https://latex.codecogs.com/gif.latex?[h_{y},&space;h_{z},&space;h_{p},&space;g_{y},&space;g_{z},&space;g_{p}]&space;=&space;D{\_}hg(s,&space;p,&space;\alpha)). The variables of the function are defined as below,
   * Input:
-    * $s$ : vector form of ODE variables and DAE variables.
-    * $p$ : parameter variables.
-    * $\alpha$ : continuation parameter.
+    * ![equation](https://latex.codecogs.com/gif.latex?s) : vector form of ODE variables and DAE variables.
+    * ![equation](https://latex.codecogs.com/gif.latex?p) : parameter variables.
+    * ![equation](https://latex.codecogs.com/gif.latex?\alpha) : continuation parameter.
   * Output:
-    * $h_y​$ : derivative of the ODEs $h​$ w.r.t. the ODE variables $y​$.
-    * $h_z$ : derivative of the ODEs $h$ w.r.t. the ODE variables $z$.
-    * $h_p$ : derivative of the ODEs $h$ w.r.t. the ODE variables $p$.
-    * $g_y$ : derivative of the DAEs $g$ w.r.t. the ODE variables $y$.
-    * $g_z$ : derivative of the DAEs $g$ w.r.t. the ODE variables $z$.
-    * $g_p$ : derivative of the DAEs $g$ w.r.t. the ODE variables $p$.
-* D_r : function handle to define the derivative of the boundary constraints w.r.t. the initial and final ODE variable values. The API of the function should be $[r_{y_{0}}, r_{y_{M}}, r_{p}] = D{\_}r(y_{0}, y_{M}, p)​$. The variables of the function are defined as below,
+    * ![equation](https://latex.codecogs.com/gif.latex?h_y) : derivative of the ODEs ![equation](https://latex.codecogs.com/gif.latex?h) w.r.t. the ODE variables ![equation](https://latex.codecogs.com/gif.latex?y).
+    * ![equation](https://latex.codecogs.com/gif.latex?h_z) : derivative of the ODEs ![equation](https://latex.codecogs.com/gif.latex?h) w.r.t. the ODE variables ![equation](https://latex.codecogs.com/gif.latex?z).
+    * ![equation](https://latex.codecogs.com/gif.latex?h_p) : derivative of the ODEs ![equation](https://latex.codecogs.com/gif.latex?h) w.r.t. the ODE variables ![equation](https://latex.codecogs.com/gif.latex?p).
+    * ![equation](https://latex.codecogs.com/gif.latex?g_y) : derivative of the DAEs ![equation](https://latex.codecogs.com/gif.latex?g) w.r.t. the ODE variables ![equation](https://latex.codecogs.com/gif.latex?y).
+    * ![equation](https://latex.codecogs.com/gif.latex?g_z) : derivative of the DAEs ![equation](https://latex.codecogs.com/gif.latex?g) w.r.t. the ODE variables ![equation](https://latex.codecogs.com/gif.latex?z).
+    * ![equation](https://latex.codecogs.com/gif.latex?g_p) : derivative of the DAEs ![equation](https://latex.codecogs.com/gif.latex?g) w.r.t. the ODE variables ![equation](https://latex.codecogs.com/gif.latex?p).
+* D_r : function handle to define the derivative of the boundary constraints w.r.t. the initial and final ODE variable values. The API of the function should be ![equation](https://latex.codecogs.com/gif.latex?[r_{y_{0}},&space;r_{y_{M}},&space;r_{p}]&space;=&space;D{\_}r(y_{0},&space;y_{M},&space;p)). The variables of the function are defined as below,
   * Input:
-    * $y_{0}$ : values of the ODE variables at the initial time $t_{0}$.
-    * $y_{M}$ : values of the ODE variables at the final time $t_{M}$.
-    * $p$ : parameter variables.
+    * ![equation](https://latex.codecogs.com/gif.latex?y_{0}) : values of the ODE variables at the initial time ![equation](https://latex.codecogs.com/gif.latex?t_{0}).
+    * ![equation](https://latex.codecogs.com/gif.latex?y_{M}) : values of the ODE variables at the final time ![equation](https://latex.codecogs.com/gif.latex?t_{M}).
+    * ![equation](https://latex.codecogs.com/gif.latex?p) : parameter variables.
   * Output:
-    * $r_{y_{0}}$ : derivative of the boundary constraints w.r.t. the initial ODE variable values.
-    * $r_{y_{M}}$ : derivative of the boundary constraints w.r.t. the final ODE variable values.
-    * $r_{p}$ : derivative of the boundary constraints w.r.t. the parameter variables.
-* y0 : matrix form of the intial estimate of the ODE variables $y$ at each time node, where each row corresponds to the values at the same node, the dimension of the matrix should be $N \times n_{y}$, where $N$ is the number of time nodes and $n_{y}$ is the number of ODE variables.
-*  z0​ :  matrix form of the intial estimate of the DAE variables $z$ at each time node, where each row corresponds to the values at the same node, the dimension of the matrix should be $N \times n_{z}$, where $N$ is the number of time nodes and $n_{z}$ is the number of DAE variables.
-* p​ : vector form of the initial estimate of the parameter variables, the dimension of the vector should be $n_{p}​$, where $n_{p}​$ is the number of parameter variables.
+    * ![equation](https://latex.codecogs.com/gif.latex?r_{y_{0}}) : derivative of the boundary constraints w.r.t. the initial ODE variable values.
+    * ![equation](https://latex.codecogs.com/gif.latex?r_{y_{M}}) : derivative of the boundary constraints w.r.t. the final ODE variable values.
+    * ![equation](https://latex.codecogs.com/gif.latex?r_{p}) : derivative of the boundary constraints w.r.t. the parameter variables.
+* y0 : matrix form of the intial estimate of the ODE variables ![equation](https://latex.codecogs.com/gif.latex?y) at each time node, where each row corresponds to the values at the same node, the dimension of the matrix should be ![equation](https://latex.codecogs.com/gif.latex?N&space;\times&space;n_{y}), where ![equation](https://latex.codecogs.com/gif.latex?N) is the number of time nodes and ![equation](https://latex.codecogs.com/gif.latex?n_{y}) is the number of ODE variables.
+*  z0 :  matrix form of the intial estimate of the DAE variables ![equation](https://latex.codecogs.com/gif.latex?z) at each time node, where each row corresponds to the values at the same node, the dimension of the matrix should be ![equation](https://latex.codecogs.com/gif.latex?N&space;\times&space;n_{z}), where ![equation](https://latex.codecogs.com/gif.latex?N) is the number of time nodes and ![equation](https://latex.codecogs.com/gif.latex?n_{z}) is the number of DAE variables.
+* p : vector form of the initial estimate of the parameter variables, the dimension of the vector should be ![equation](https://latex.codecogs.com/gif.latex?n_{p}), where ![equation](https://latex.codecogs.com/gif.latex?n_{p}) is the number of parameter variables.
 * ti : initial time of the problem, which should be a nonnegative number.
 * tM : final time of the problem, which should be a positive number.
 * output : file name of the output files which should be a string.

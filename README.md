@@ -14,7 +14,7 @@ The input of the solver should contain the various function handles to define th
 
 ### Input
 
-* ODE_h : function handle to define the ordinary differential equations (ODEs). The API of the function should be $\dot{y} = ODE\_h(y, z, p, \alpha)$. The dynamic systems considered here are non-autonomous system so there is no explicitly time $t$ in the ODEs. The variables of the function are defined as below,
+* ODE_h : function handle to define the ordinary differential equations (ODEs). The API of the function should be $$\dot{y} = ODE\_h(y, z, p, \alpha)$$. The dynamic systems considered here are non-autonomous system so there is no explicitly time $t$ in the ODEs. The variables of the function are defined as below,
   * Input:
      * $y$ : ODE variables.
      * $z$ : DAE variables.

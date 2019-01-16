@@ -4,14 +4,6 @@ Multiple shooting method for solving optimal control problems.
 
 The repo contains two directories: 1)ms_BVP; 2) ms_OCP.
 
-```html
-<img src="http://chart.googleapis.com/chart?cht=tx&chl=\Large x=\frac{-b\pm\sqrt{b^2-4ac}}{2a}" style="border:none;">
-- <img src="https://latex.codecogs.com/gif.latex?O_t=\text { Onset event at time bin } t " />
-<img src="https://latex.codecogs.com/gif.latex?O_t=\text { Onset event at time bin } t " />
-```
-
-![equation](https://latex.codecogs.com/gif.latex?\sin(a&space;&plus;&space;b&space;\times&space;c))
-
 ## mps_BVP
 
 The directory contains the solver that can solves the boundary value problem (BVP) with differential algebraic equations (DAEs) defined in the specific format and gives the solution of the BVP.
@@ -20,25 +12,25 @@ The input of the solver should contain the various function handles to define th
 
 ### Input
 
-* ODE_h : function handle to define the ordinary differential equations (ODEs). The API of the function should be $$\dot{y} = ODE\_h(y, z, p, \alpha)$$. The dynamic systems considered here are non-autonomous system so there is no explicitly time $t$ in the ODEs. The variables of the function are defined as below,
+* ODE_h : function handle to define the ordinary differential equations (ODEs). The API of the function should be ![equation](https://latex.codecogs.com/gif.latex?\dot{y}&space;=&space;ODE\_h(y,&space;z,&space;p,&space;\alpha)). The dynamic systems considered here are non-autonomous system so there is no explicitly time $t$ in the ODEs. The variables of the function are defined as below,
   * Input:
-     * $y$ : ODE variables.
-     * $z$ : DAE variables.
-     * $p$ : parameter variables.
-     * $\alpha$ : continuation parameter.
+     * ![equation](https://latex.codecogs.com/gif.latex?y) : ODE variables.
+     * ![equation](https://latex.codecogs.com/gif.latex?z) : DAE variables.
+     * ![equation](https://latex.codecogs.com/gif.latex?p) : parameter variables.
+     * ![equation](https://latex.codecogs.com/gif.latex?\alpha) : continuation parameter.
   * Output:
-    * $\dot{y}$ : derivatives of the ODE variables.
-* DAE_g : function handle to define the differential algebraic equations (DAEs). The API of the function should be $0 = DAE\_g(y, z, p, \alpha)$. The variables of the function are defined as below, 
+    * ![equation](https://latex.codecogs.com/gif.latex?\dot{y}) : derivatives of the ODE variables.
+* DAE_g : function handle to define the differential algebraic equations (DAEs). The API of the function should be ![equation](https://latex.codecogs.com/gif.latex?0&space;=&space;DAE\_g(y,&space;z,&space;p,&space;\alpha)). The variables of the function are defined as below, 
   * Input:
-    * $y$ : ODE variables.
-    * $z$ : DAE variables.
-    * $p$ : parameter variables.
-    * $\alpha$ : continuation parameter.
-* BC_r : function handle to define the boundary constraints of the BVP problem. The API of the function should be $0 = BC{\_}r(y_{0}, y_{M}, p)$. The variables of the function are defined as below,
+    * ![equation](https://latex.codecogs.com/gif.latex?y) : ODE variables.
+    * ![equation](https://latex.codecogs.com/gif.latex?z) : DAE variables.
+    * ![equation](https://latex.codecogs.com/gif.latex?p) : parameter variables.
+    * ![equation](https://latex.codecogs.com/gif.latex?\alpha) : continuation parameter.
+* BC_r : function handle to define the boundary constraints of the BVP problem. The API of the function should be ![equation](https://latex.codecogs.com/gif.latex?0&space;=&space;BC{\_}r(y_{0},&space;y_{M},&space;p)). The variables of the function are defined as below,
   * Input:
-    * $y_{0}$ : values of the ODE variables at the initial time $t_{0}$.
-    * $y_{M}$ : values of the ODE variables at the final time $t_{M}$.
-    * $p​$ : parameter variables.
+    * ![equation](https://latex.codecogs.com/gif.latex?y_{0}) : values of the ODE variables at the initial time $t_{0}$.
+    * ![equation](https://latex.codecogs.com/gif.latex?y_{M}): values of the ODE variables at the final time $t_{M}$.
+    * ![equation](https://latex.codecogs.com/gif.latex?p): parameter variables.
 * D_hg : function handle to define the derivative of the ODEs and DAEs w.r.t. ODE variables, DAE variables, and parameter variables. The API of the function should be $[h_{y}, h_{z}, h_{p}, g_{y}, g_{z}, g_{p}] = D{\_}hg(s, p, \alpha)​$. The variables of the function are defined as below,
   * Input:
     * $s$ : vector form of ODE variables and DAE variables.

@@ -10,6 +10,8 @@ The repo contains two directories: 1)ms_BVP; 2) ms_OCP.
 <img src="https://latex.codecogs.com/gif.latex?O_t=\text { Onset event at time bin } t " />
 ```
 
+![equation](https://latex.codecogs.com/gif.latex?\sin(a&space;&plus;&space;b&space;\times&space;c))
+
 ## mps_BVP
 
 The directory contains the solver that can solves the boundary value problem (BVP) with differential algebraic equations (DAEs) defined in the specific format and gives the solution of the BVP.

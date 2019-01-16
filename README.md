@@ -4,6 +4,10 @@ Multiple shooting method for solving optimal control problems.
 
 The repo contains two directories: 1)ms_BVP; 2) ms_OCP.
 
+```html
+<img src="http://chart.googleapis.com/chart?cht=tx&chl=\Large x=\frac{-b\pm\sqrt{b^2-4ac}}{2a}" style="border:none;">
+```
+
 ## mps_BVP
 
 The directory contains the solver that can solves the boundary value problem (BVP) with differential algebraic equations (DAEs) defined in the specific format and gives the solution of the BVP.

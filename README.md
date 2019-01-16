@@ -6,6 +6,8 @@ The repo contains two directories: 1)ms_BVP; 2) ms_OCP.
 
 ```html
 <img src="http://chart.googleapis.com/chart?cht=tx&chl=\Large x=\frac{-b\pm\sqrt{b^2-4ac}}{2a}" style="border:none;">
+- <img src="https://latex.codecogs.com/gif.latex?O_t=\text { Onset event at time bin } t " />
+<img src="https://latex.codecogs.com/gif.latex?O_t=\text { Onset event at time bin } t " />
 ```
 
 ## mps_BVP

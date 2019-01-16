@@ -12,7 +12,7 @@ The input of the solver should contain the various function handles to define th
 
 ### Input
 
-* ODE_h : function handle to define the ordinary differential equations (ODEs). The API of the function should be ![equation](https://latex.codecogs.com/gif.latex?\dot{y}&space;=&space;ODE{\_h}(y,&space;z,&space;p,&space;\alpha)). The dynamic systems considered here are non-autonomous system so there is no explicitly time ![equation](https://latex.codecogs.com/gif.latex?t) in the ODEs. The variables of the function are defined as below,
+* ODE_h : function handle to define the ordinary differential equations (ODEs). The API of the function should be ![equation](https://latex.codecogs.com/gif.latex?\dot{y}&space;=&space;ODE{\_}h(y,&space;z,&space;p,&space;\alpha)). The dynamic systems considered here are non-autonomous system so there is no explicitly time ![equation](https://latex.codecogs.com/gif.latex?t) in the ODEs. The variables of the function are defined as below,
   * Input:
      * ![equation](https://latex.codecogs.com/gif.latex?y) : ODE variables.
      * ![equation](https://latex.codecogs.com/gif.latex?z) : DAE variables.
@@ -20,7 +20,7 @@ The input of the solver should contain the various function handles to define th
      * ![equation](https://latex.codecogs.com/gif.latex?\alpha) : continuation parameter.
   * Output:
     * ![equation](https://latex.codecogs.com/gif.latex?\dot{y}) : derivatives of the ODE variables.
-* DAE_g : function handle to define the differential algebraic equations (DAEs). The API of the function should be ![equation](https://latex.codecogs.com/gif.latex?0&space;=&space;DAE{\_g}(y,&space;z,&space;p,&space;\alpha)). The variables of the function are defined as below, 
+* DAE_g : function handle to define the differential algebraic equations (DAEs). The API of the function should be ![equation](https://latex.codecogs.com/gif.latex?0&space;=&space;DAE{\_}g(y,&space;z,&space;p,&space;\alpha)). The variables of the function are defined as below, 
   * Input:
     * ![equation](https://latex.codecogs.com/gif.latex?y) : ODE variables.
     * ![equation](https://latex.codecogs.com/gif.latex?z) : DAE variables.

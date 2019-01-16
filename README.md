@@ -1,5 +1,3 @@
-<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
-
 # mps_solver_MATLAB
 
 Multiple shooting method for solving optimal control problems.

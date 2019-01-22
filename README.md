@@ -74,9 +74,38 @@ The input of the solver should contain the various function handles to define th
 * z : final solution of the DAE varaibles of the problem which is saved in output + '_z.txt' file.
 * p : final solution of the parameter varaibles of the problem which is saved in output + '_p.txt' file.
 * ![equation](https://latex.codecogs.com/gif.latex?\alpha) : final value of the continuation parameter which in saved in output + '_alpha.txt' file.
+* The solver also gives the plot of each variables.
 
 ## mps_OCP
 
 The directory contains the solver that can directly solves the optimal control problem (OCP) defined in the specific format and gives the optimal solution.
 
 The input is just the plain text file with the specific defined name fileds and the ouputs are the optimal solutions of various variables of the OCP.
+
+### Input
+
+The API of the solver is mps_OCP(OCP_file), where OCP_file is the plain text file that defines the OCP with specific key words. The required key words are shown below,
+
+* StateVariables: string arrays starting with '[', ending with '];', and separated by ',' to define the state vairables of the OCP in symbolic function.
+* ControlVariables: string arrays starting with '[', ending with '];', and separated by ',' to define the control vairables of the OCP in symbolic function.
+* InitialConstraints: string arrays starting with '[', ending with '];', and separated by ',' to define the initial constraints of the state vairables of the OCP in symbolic function.
+* TerminalConstraints: string arrays starting with '[', ending with '];', and separated by ',' to define the terminal constraints of the state vairables of the OCP in symbolic function.
+* TerminalPenalty: string ending with ';' to define the terminal penalty term of the cost function of the OCP in symbolic function.
+* CostFunctional: string ending with ';' to define the integral term of the cost function of the OCP in symbolic function.
+* DifferentialEquations: string arrays starting with '[', ending with '];', and separated by ',' to define the differential equations of the dynamic system of the OCP in symbolic function.
+* InequalityConstraints: string arrays starting with '[', ending with '];', and separated by ',' to define the control variables inequality constrains (CVICs) of the OCP in symbolic function.
+* StateVariableInequalityConstraints: string arrays starting with '[', ending with '];', and separated by ',' to define the state variables inequality constrains (SVICs) of the OCP in symbolic function.
+* Tolerance: double to defeine to numerical tolerance of the algorithm, default as ![equation](https://latex.codecogs.com/gif.latex?10^{-6}).
+* InputFile: string of the name of the specified input files for various variables if needed.
+* OutputFile: string of the name of the specified output files for various variables if needed.
+* MaximumNodes: integer to define the maimum number of nodes allowed while solving the problem.
+* Display: string to specify whether to display the results of various variables of the problem.
+* MaximumNewtonIterations: integer to define the maimum number of iterations allowed while solving the problem.
+* MaximumMeshRefinements: integer to define the maimum number of mesh refinements allowed while solving the problem.
+
+### Ouput
+
+* y : final solution of the ODE varaibles of the problem which is saved in output + '_y.txt' file.
+* z : final solution of the DAE varaibles of the problem which is saved in output + '_z.txt' file.
+* p : final solution of the parameter varaibles of the problem which is saved in output + '_p.txt' file.
+* ![equation](https://latex.codecogs.com/gif.latex?\alpha) : final value of the continuation parameter which in saved in output + '_alpha.txt' file.

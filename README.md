@@ -1,6 +1,6 @@
 # mps_solver_MATLAB
 
-Multiple shooting method for solving optimal control problems.
+Multiple shooting method for solving optimal control problems. The solver should be run on version MATLAB 2017b. 
 
 The repo contains two directories: 1)ms_BVP; 2) ms_OCP.
 
